@@ -1,22 +1,32 @@
-// build: browserify index.ts -p tsify > static/js/bundle.js
-
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
 import { Connection, PublicKey, Transaction, TransactionInstruction, SystemProgram } from "@solana/web3.js";
-import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { deserializeAccount, deriveAssociatedTokenAddress } from "@orca-so/sdk";
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, unpackAccount } from "@solana/spl-token";
 import $ from "jquery";
 import Decimal from "decimal.js";
+
+// polyfill Buffer
+import { Buffer } from 'buffer';
+declare global {
+    interface Window {
+        Buffer: typeof Buffer;
+    }
+}
+window.Buffer = Buffer;
+
 
 console.log("bundle.js loading...");
 
 const DEVNET_RPC_ENDPOINT = "https://api.devnet.solana.com";
 
 const DEVTOKENS = [
-    {symbol: "SOL", mint: new PublicKey("So11111111111111111111111111111111111111112"), decimals: 9},
-    {symbol: "devUSDC", mint: new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"), decimals: 6},
-    {symbol: "devUSDT", mint: new PublicKey("H8UekPGwePSmQ3ttuYGPU1szyFfjZR4N53rymSFwpLPm"), decimals: 6},
-    {symbol: "devSAMO", mint: new PublicKey("Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa"), decimals: 9},
-    {symbol: "devTMAC", mint: new PublicKey("Afn8YB1p4NsoZeS5XJBZ18LTfEy5NFPwN46wapZcBQr6"), decimals: 6},
+    {symbol: "SOL", mint: new PublicKey("So11111111111111111111111111111111111111112"), decimals: 9, tokenProgram: TOKEN_PROGRAM_ID},
+    {symbol: "devUSDC", mint: new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"), decimals: 6, tokenProgram: TOKEN_PROGRAM_ID},
+    {symbol: "devUSDT", mint: new PublicKey("H8UekPGwePSmQ3ttuYGPU1szyFfjZR4N53rymSFwpLPm"), decimals: 6, tokenProgram: TOKEN_PROGRAM_ID},
+    {symbol: "devSAMO", mint: new PublicKey("Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa"), decimals: 9, tokenProgram: TOKEN_PROGRAM_ID},
+    {symbol: "devTMAC", mint: new PublicKey("Afn8YB1p4NsoZeS5XJBZ18LTfEy5NFPwN46wapZcBQr6"), decimals: 6, tokenProgram: TOKEN_PROGRAM_ID},
+    {symbol: "devPYUSD", mint: new PublicKey("Hy5ZLF26P3bjfVtrt4qDQCn6HGhS5izb5SNv7P9qmgcG"), decimals: 6, tokenProgram: TOKEN_2022_PROGRAM_ID},
+    {symbol: "devBERN", mint: new PublicKey("9fcwFnknB7cZrpVYQxoFgt9haYe59G7bZyTYJ4PkYjbS"), decimals: 5, tokenProgram: TOKEN_2022_PROGRAM_ID},
+    {symbol: "devSUSD", mint: new PublicKey("FKUPCock94bCnKqsi7UgqxnpzQ43c6VHEYhuEPXYpoBk"), decimals: 6, tokenProgram: TOKEN_2022_PROGRAM_ID},
 ];
 
 const connection = new Connection(DEVNET_RPC_ENDPOINT, "confirmed");
@@ -59,7 +69,7 @@ function scaled(amount: Decimal, scale: number): string {
 
 async function get_balance(wallet_pubkey: PublicKey) {
     const accounts = await Promise.all(DEVTOKENS.map(async (token) => {
-        const ata = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, token.mint, wallet_pubkey);
+        const ata = getAssociatedTokenAddressSync(token.mint, wallet_pubkey, true, token.tokenProgram);
         return token.symbol === "SOL" ? wallet_pubkey : ata;
     }));
     console.log("accounts", accounts);
@@ -67,6 +77,7 @@ async function get_balance(wallet_pubkey: PublicKey) {
     const account_infos = await connection.getMultipleAccountsInfo(accounts);
     console.log("account_infos", account_infos);
     const balance = account_infos.map((info, i) => {
+        const address = accounts[i];
         const token = DEVTOKENS[i];
 
         let amount: string = null;
@@ -75,7 +86,7 @@ async function get_balance(wallet_pubkey: PublicKey) {
         } else if ( token.symbol === "SOL" ) {
             amount = scaled(new Decimal(info.lamports), token.decimals);
         } else {
-            amount = scaled(new Decimal(deserializeAccount(<Buffer>info.data).amount.toString()), token.decimals);
+            amount = scaled(new Decimal(unpackAccount(address, info, info.owner).amount.toString()), token.decimals);
         }
         return {...token, amount};
     });
@@ -144,7 +155,7 @@ async function update_balance() {
     notify_success("balance updated");
 }
 
-async function swap( mint: PublicKey ) {
+async function swap( mint: PublicKey, tokenProgramId: PublicKey ) {
     const DEVTOKEN_DISTRIBUTOR_PROGRAM_ID = new PublicKey("Bu2AaWnVoveQT47wP4obpmmZUwK9bN9ah4w6Vaoa93Y9");
     const DEVTOKEN_ADMIN = new PublicKey("3otH3AHWqkqgSVfKFkrxyDqd2vK6LcaqigHrFEmWcGuo");
     const PDA = new PublicKey("3pgfe1L6jcq59uy3LZmmeSCk9mwVvHXjn21nSvNr8D6x");
@@ -152,8 +163,8 @@ async function swap( mint: PublicKey ) {
     try {
         notify_info("swap prepairing...");
 
-        const vault = await deriveAssociatedTokenAddress(PDA, mint);
-        const user_vault = await deriveAssociatedTokenAddress(adapter.publicKey, mint);
+        const vault = getAssociatedTokenAddressSync(mint, PDA, true, tokenProgramId);
+        const user_vault = getAssociatedTokenAddressSync(mint, adapter.publicKey, true, tokenProgramId);
   
         const ix = new TransactionInstruction({
           programId: DEVTOKEN_DISTRIBUTOR_PROGRAM_ID,
@@ -164,7 +175,7 @@ async function swap( mint: PublicKey ) {
             { pubkey: adapter.publicKey, isSigner: true, isWritable: true },
             { pubkey: user_vault, isSigner: false, isWritable: true },
             { pubkey: DEVTOKEN_ADMIN, isSigner: false, isWritable: true },
-            { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+            { pubkey: tokenProgramId, isSigner: false, isWritable: false },
             { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
             { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
           ],
@@ -218,26 +229,44 @@ async function button_airdrop_onclick() {
 
 async function button_swap_sol2devusdc_onclick() {
     console.log("button_swap_sol2devusdc_onclick");
-    const mint = DEVTOKENS.filter((token) => token.symbol === "devUSDC")[0].mint;
-    swap(mint);
+    const token = DEVTOKENS.filter((token) => token.symbol === "devUSDC")[0];
+    swap(token.mint, token.tokenProgram);
 }
 
 async function button_swap_sol2devusdt_onclick() {
     console.log("button_swap_sol2devusdt_onclick");
-    const mint = DEVTOKENS.filter((token) => token.symbol === "devUSDT")[0].mint;
-    swap(mint);
+    const token = DEVTOKENS.filter((token) => token.symbol === "devUSDT")[0];
+    swap(token.mint, token.tokenProgram);
 }
 
 async function button_swap_sol2devsamo_onclick() {
     console.log("button_swap_sol2devsamo_onclick");
-    const mint = DEVTOKENS.filter((token) => token.symbol === "devSAMO")[0].mint;
-    swap(mint);
+    const token = DEVTOKENS.filter((token) => token.symbol === "devSAMO")[0];
+    swap(token.mint, token.tokenProgram);
 }
 
 async function button_swap_sol2devtmac_onclick() {
     console.log("button_swap_sol2devtmac_onclick");
-    const mint = DEVTOKENS.filter((token) => token.symbol === "devTMAC")[0].mint;
-    swap(mint);
+    const token = DEVTOKENS.filter((token) => token.symbol === "devTMAC")[0];
+    swap(token.mint, token.tokenProgram);
+}
+
+async function button_swap_sol2devpyusd_onclick() {
+    console.log("button_swap_sol2devpyusd_onclick");
+    const token = DEVTOKENS.filter((token) => token.symbol === "devPYUSD")[0];
+    swap(token.mint, token.tokenProgram);
+}
+
+async function button_swap_sol2devbern_onclick() {
+    console.log("button_swap_sol2devbern_onclick");
+    const token = DEVTOKENS.filter((token) => token.symbol === "devBERN")[0];
+    swap(token.mint, token.tokenProgram);
+}
+
+async function button_swap_sol2devsusd_onclick() {
+    console.log("button_swap_sol2devsusd_onclick");
+    const token = DEVTOKENS.filter((token) => token.symbol === "devSUSD")[0];
+    swap(token.mint, token.tokenProgram);
 }
 
 $(window).on("load", function() {
@@ -254,4 +283,7 @@ $(window).on("load", function() {
     $("#swap_sol2devusdt").on("click", button_swap_sol2devusdt_onclick);
     $("#swap_sol2devsamo").on("click", button_swap_sol2devsamo_onclick);
     $("#swap_sol2devtmac").on("click", button_swap_sol2devtmac_onclick);
+    $("#swap_sol2devpyusd").on("click", button_swap_sol2devpyusd_onclick);
+    $("#swap_sol2devbern").on("click", button_swap_sol2devbern_onclick);
+    $("#swap_sol2devsusd").on("click", button_swap_sol2devsusd_onclick);
 });
