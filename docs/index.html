@@ -81,7 +81,7 @@ toastr.options = {
 </span>
 </div>
 
-<div style="width: 900px; margin: 0px auto; padding: 0px; background-color: white; text-align: left;">
+<div style="width: 960px; margin: 0px auto; padding: 0px; background-color: white; text-align: left;">
 
 <!--div style="background-image: url(background.jpg); width:800px; height: 360px;"></div-->
 
@@ -108,27 +108,45 @@ These tokens are available in devnet only, and so these are essentially worthles
                 <img src="static/img/SOL.png" style="height: 50px; width: 50px;">
                 <img src="static/img/USDC.png" style="height: 50px; width: 50px; margin-left: -25px;">
             </div><br>
-            Swap<br>0.2 SOL for devUSDC</button>
+            Convert<br>0.1 SOL to devUSDC</button>
         <button id="swap_sol2devusdt" disabled="true">
             <div>
                 <img src="static/img/SOL.png" style="height: 50px; width: 50px;">
                 <img src="static/img/USDT.png" style="height: 50px; width: 50px; margin-left: -25px;">
             </div><br>
-            Swap<br>0.2 SOL for devUSDT</button>
+            Convert<br>0.1 SOL to devUSDT</button>
         <button id="swap_sol2devsamo" disabled="true">
             <div>
                 <img src="static/img/SOL.png" style="height: 50px; width: 50px;">
                 <img src="static/img/SAMO.png" style="height: 50px; width: 50px; margin-left: -25px;">
             </div><br>
-            Swap<br>0.2 SOL for devSAMO</button>
+            Convert<br>0.1 SOL to devSAMO</button>
         <button id="swap_sol2devtmac" disabled="true">
             <div>
                 <img src="static/img/SOL.png" style="height: 50px; width: 50px;">
                 <img src="static/img/TMAC.png" style="height: 50px; width: 50px; margin-left: -25px;">
             </div><br>
-            Swap<br>0.2 SOL for devTMAC</button>
+            Convert<br>0.1 SOL to devTMAC</button>
+        <button id="swap_sol2devpyusd" disabled="true">
+            <div>
+                <img src="static/img/SOL.png" style="height: 50px; width: 50px;">
+                <img src="static/img/PYUSD.png" style="height: 50px; width: 50px; margin-left: -25px;">
+            </div><br>
+            Convert<br>0.1 SOL to devPYUSD</button>
+        <button id="swap_sol2devbern" disabled="true">
+            <div>
+                <img src="static/img/SOL.png" style="height: 50px; width: 50px;">
+                <img src="static/img/BERN.png" style="height: 50px; width: 50px; margin-left: -25px;">
+            </div><br>
+            Convert<br>0.1 SOL to devBERN</button>
+        <button id="swap_sol2devsusd" disabled="true">
+            <div>
+                <img src="static/img/SOL.png" style="height: 50px; width: 50px;">
+                <img src="static/img/SUSD.png" style="height: 50px; width: 50px; margin-left: -25px;">
+            </div><br>
+            Convert<br>0.1 SOL to devSUSD</button>
     </div>
-    <div class="box" style="border: 1px solid black; background-color: white; width: 270px; min-height: 270px;;">
+    <div class="box" style="border: 1px solid black; background-color: white; width: 270px; min-height: 400px;;">
     <pre id="terminal" style="width: 100%; height: 100%; padding: 10px; font-family: 'Courier New', Consolas, monospace, monospace;">
 <!--Pubkey  xxxxx...xxxxx
 
@@ -147,17 +165,20 @@ devTMAC   300.382923-->
 
 <h3>devToken specification</h3>
 <table style="text-align: left; font-size: small;" cellpadding="2">
-    <tr><th>token</th><th>mint address</th><th>decimals</th></tr>
-    <tr><td>devUSDC</td><td>BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k</td><td>6</td></tr>
-    <tr><td>devUSDT</td><td>H8UekPGwePSmQ3ttuYGPU1szyFfjZR4N53rymSFwpLPm</td><td>6</td></tr>
-    <tr><td>devSAMO</td><td>Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa</td><td>9</td></tr>
-    <tr><td>devTMAC</td><td>Afn8YB1p4NsoZeS5XJBZ18LTfEy5NFPwN46wapZcBQr6</td><td>6</td></tr>
+    <tr><th>token</th><th>mint address</th><th>decimals</th><th>token program</th><th>extensions</th></tr>
+    <tr><td>devUSDC</td><td>BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k</td><td>6</td><td>Token</td><td>none</td></tr>
+    <tr><td>devUSDT</td><td>H8UekPGwePSmQ3ttuYGPU1szyFfjZR4N53rymSFwpLPm</td><td>6</td><td>Token</td><td>none</td></tr>
+    <tr><td>devSAMO</td><td>Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa</td><td>9</td><td>Token</td><td>none</td></tr>
+    <tr><td>devTMAC</td><td>Afn8YB1p4NsoZeS5XJBZ18LTfEy5NFPwN46wapZcBQr6</td><td>6</td><td>Token</td><td>none</td></tr>
+    <tr style=" vertical-align: top;"><td>devPYUSD</td><td>Hy5ZLF26P3bjfVtrt4qDQCn6HGhS5izb5SNv7P9qmgcG</td><td>6</td><td>Token-2022</td><td><table style="margin-top: -4px;"><tr><td>PermanentDelegate</td></tr><tr><td>MintCloseAuthority</td></tr><tr><td>ConfidentialTransfer (manual)</td></tr><tr><td>TransferFee (0%)</td></tr><tr><td>TransferHook (disabled)</td></tr></table></td></tr>
+    <tr><td>devBERN</td><td>9fcwFnknB7cZrpVYQxoFgt9haYe59G7bZyTYJ4PkYjbS</td><td>5</td><td>Token-2022</td><td><table><tr><td>TransferFee (2.69%)</td></tr></table></td></tr>
+    <tr><td>devSUSD</td><td>FKUPCock94bCnKqsi7UgqxnpzQ43c6VHEYhuEPXYpoBk</td><td>6</td><td>Token-2022</td><td><table><tr><td>InterestBearing (3.0%)</td></tr></table></td></tr>
 </table>
 
 <hr style="border: 2px dotted darkgray; margin-top: 10px; margin-bottom: 10px;">
 <h3>devToken ecosystem</h3>
 
-<h4>Orca🐬 Whirlpools</h4>
+<h4>🌀 Orca Whirlpools</h4>
 <table style="text-align: left;" cellpadding="2">
   <tr><th>whirlpool program</th></tr>
   <tr><td>whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc</td></tr>
@@ -167,14 +188,21 @@ devTMAC   300.382923-->
 
 <table style="text-align: left;" cellpadding="2">
     <tr><th>pair</th><th>tick spacing</th><th>pool address</th><th>yield</th></tr>
+    <tr><td>SOL / devUSDC</td><td>8</td><td>2WUgXbAmhquXMLhqqUthztDaVYnG8Mmp57CkXNb5ym9G</td><td>fee</td></tr>
     <tr><td>SOL / devUSDC</td><td>64</td><td>3KBZiL2g8C7tiJ32hTv5v3KM7aK9htpqTw4cTXz1HvPt</td><td>fee</td></tr>
+    <tr><td>SOL / devUSDC</td><td>32896 (Splash)</td><td>26WuWhkPBhG5d6kZwHBTruLxLvbSe7C62qH21zpisP9c</td><td>fee</td></tr>
     <tr><td>devUSDC / devUSDT</td><td>1</td><td>63cMwvN8eoaD39os9bKP8brmA7Xtov9VxahnPufWCSdg</td><td>fee</td></tr>
     <tr><td>devSAMO / devUSDC</td><td>64</td><td>EgxU92G34jw6QDG9RuTX9StFg1PmHuDqkRKAE5kVEiZ4</td><td>fee + reward(devTMAC + devSAMO)</td></tr>
     <tr><td>devTMAC / devUSDC</td><td>64</td><td>H3xhLrSEyDFm6jjG42QezbvhSxF5YHW75VdGUnqeEg5y</td><td>fee</td></tr>
+    <tr><td>SOL / devPYUSD</td><td>32</td><td>8WLHU9LsezCo3DWdFk33rRPdybJabfZ7cBn9ZroWu11t</td><td>fee</td></tr>
+    <tr><td>devUSDC / devPYUSD</td><td>1</td><td>J3J1hfwBCXgqp5vVPyfwkzUmcWRpsh3FdAvDiLEMzzYZ</td><td>fee</td></tr>
+    <tr><td>devSUSD / devPYUSD</td><td>1</td><td>EENrwVE3NBeR5VcahPeZC8MietVKbXxnVRomagWdVuZa</td><td>fee</td></tr>
+    <tr><td>devBERN / devPYUSD</td><td>128</td><td>DhGmYde8VmvVectHigcxZqAJBfCzARJxRCJsU6mBksdn</td><td>fee</td></tr>
+    <tr><td>devBERN / devPYUSD</td><td>32896 (Splash)</td><td>EdACSeagirp87pAkGwvHwsVkRwkjZTxd83v2UqgiB9LA</td><td>fee</td></tr>
 </table>
-<span style="font-size: x-small;">* In devSAMO/devUSDC whirlpool, swap is <a href="https://solscan.io/account/2ptkDVtP27muaDzuR1a8QeiproBD1cQf2NZLtfG4XdY9?cluster=devnet" style="text-decoration:none;">executed every 10 minutes</a> to stabilize price and to generate trade fee.</span>
+<!-- span style="font-size: x-small;">* In devSAMO/devUSDC whirlpool, swap is <a href="https://solscan.io/account/2ptkDVtP27muaDzuR1a8QeiproBD1cQf2NZLtfG4XdY9?cluster=devnet" style="text-decoration:none;">executed every 10 minutes</a> to stabilize price and to generate trade fee.</span -->
 
-<h4>Orca🐬 pools</h4>
+<h4>⛵️ Orca Legacy pools (Deprecated)</h4>
 <table style="text-align: left;" cellpadding="2">
     <tr><th>pair</th><th>pool address</th><th>curve type</th></tr>
     <tr><td>SOL / devUSDC</td><td>9NgniQavdJb867DEZDhcXYozQednUNUNVbNNzfLk72Pi</td><td>ConstantProduct</td></tr>
